@@ -1,0 +1,31 @@
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1050;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Dropdowns adapt automatically to page theme */
+.dropdown-menu {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    z-index: 1050; /* higher than .navbar */
+    position: absolute; /* Bootstrap default, but reinforce it */
+
+}
+
+.dropdown-item {
+    color: inherit;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+

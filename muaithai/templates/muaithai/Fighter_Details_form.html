@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block content %}
+
+<div class="d-flex justify-content-center align-items-center min-vh-100 bg-muted">
+    <div class="form-card p-5 shadow-lg rounded-4 bg-black text-white h-100">
+        <h2 class="text-center mb-4 text-ufc fw-bold">UFC Fighter Registration</h2>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Name -->
+            <div class="mb-3">
+                <label for="id_Name" class="form-label fw-bold">Name</label>
+                {{ form.Name|add_class:"form-control fighter-input" }}
+            </div>
+
+            <!-- Weight Class -->
+            <div class="mb-3">
+                <label for="id_Weight_class" class="form-label fw-bold">Weight Class</label>
+                {{ form.Weight_class|add_class:"form-control fighter-input" }}
+            </div>
+
+            <div class="mb-3 row">
+                <!-- Age -->
+                <div class="col-md-6">
+                    <label for="id_Age" class="form-label fw-bold">Age</label>
+                    {{ form.Age|add_class:"form-control fighter-input" }}
+                </div>
+
+                <!-- P4P Rank -->
+                <div class="col-md-6">
+                    <label for="id_p4p_rank" class="form-label fw-bold">P4P Rank</label>
+                    {{ form.p4p_rank|add_class:"form-control fighter-input" }}
+                </div>
+            </div>
+
+            <!-- Professional Record -->
+            <div class="mb-3">
+                <label for="id_Prof_record" class="form-label fw-bold">Professional Record</label>
+                {{ form.Prof_record|add_class:"form-control fighter-input" }}
+            </div>
+
+            <!-- Image -->
+            <div class="mb-4">
+                <label for="id_Image" class="form-label fw-bold">Upload Image</label>
+                {{ form.Image|add_class:"form-control fighter-input" }}
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-ufc rounded-pill py-2 fs-5 fw-bold">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #574dc6 40%, #d3219a 100%);
+    }
+
+    .form-card {
+        width: 480px;
+        border: 2px solid #c99c14; /* UFC red border */
+    }
+
+    .fighter-input {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        color: white;
+        box-shadow: inset 0 0 5px rgba(111, 137, 170, 0.932);
+    }
+
+    .fighter-input:focus {
+        border: 1px solid #249218;
+        box-shadow: 0 0 8px rgba(225, 6, 0, 0.6);
+        background: #111;
+        color: white;
+    }
+
+    .text-ufc {
+        color: #9d910c;
+        letter-spacing: 1px;
+    }
+
+    .btn-ufc {
+        background: #d65424;
+        border: none;
+        transition: 0.3s;
+    }
+
+    .btn-ufc:hover {
+        background: #0bc55b;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(225, 6, 0, 0.5);
+    }
+</style>
+
+{% endblock %}

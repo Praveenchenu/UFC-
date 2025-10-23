@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<a href="{% url 'readfighter' %}" class="btn btn-primary btn-sm">Back</a>
+<div class="container my-5 d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+
+
+
+  <div class="card shadow-lg bg-dark text-light" style="width: 20rem; border-radius: 15px; overflow: hidden;">
+    
+    {% if fighterDetails.Image %}
+      {% comment %} <img src="{{ fighterDetails.Image.url }}" class="card-img-top" alt="{{ fighterDetails.Name }}" 
+           style="height: 220px; object-fit: contain; object-position: top;">
+    {% else %}
+      <img src="{% static 'images/default_card.jpg' %}" class="card-img-top" alt="No image"
+           style="height: 220px; object-fit: cover; object-position: top;">
+    {% endif %}
+    
+    <div class="card-body text-center">
+      <h4 class="card-title text-light mb-2">{{ fighterDetails.Name }}</h4>
+      <p>{{ fighterDetails.Weight_class }}</p>
+      <p class="card-text mb-1"><strong class="text-secondary">Age:</strong> {{ fighterDetails.Age }}</p>
+      <p class="card-text mb-1"><strong class="text-success">Professional Record:</strong> {{ fighterDetails.Prof_record }}</p>
+      <p class="card-text mb-3"><strong class="text-primary">Created at:</strong> {{ fighterDetails.created_at }}</p>
+
+      <div class="d-flex justify-content-center gap-3">
+        <a href="{% url 'updatefighter' fighterDetails.pk %}" class="btn btn-warning btn-sm">Edit</a>
+        <a href="{% url 'deletefighter' fighterDetails.pk %}" class="btn btn-danger btn-sm">Delete</a>
+      </div>
+    </div> {% endcomment %}
+
+                  <img src="{{ fighterDetails.Image.url }}" class="card-img-top fixed-img" alt="{{ fighterDetails.Name }}">
+            {% else %}
+              <img src="https://via.placeholder.com/300x200?text={{ fighterDetails.Name|urlencode }}" class="card-img-top fixed-img" alt="{{ fighterDetails.Name }}">
+            {% endif %}
+            <div class="card-body bg-dark text-white">
+              <h5 class="card-title fw-bold">{{ fighterDetails.Name }}</h5> 
+              <p class="card-text small">
+                <strong>Rank(p4p):</strong> #{{ fighterDetails.p4p_rank }}<br>
+                <strong>Weight Class:</strong> {{ fighterDetails.Weight_class }}<br>
+                <strong>Age:</strong> {{ fighterDetails.Age }}<br>
+                <strong>Professional Record:</strong> {{ fighterDetails.Prof_record }}<br>
+                <strong>Created :</strong> {{ fighterDetails.created_at|timesince }} ago<br>
+                <strong>Created :</strong> {{ fighterDetails.created_at|date:"F j, Y" }} ago
+              </p>
+              <div class="d-flex justify-content-center gap-3">
+                  <a href="{% url 'updatefighter' fighterDetails.pk %}" class="btn btn-warning btn-sm">Edit</a>
+                  <a href="{% url 'deletefighter' fighterDetails.pk %}" class="btn btn-danger btn-sm">Delete</a>
+            </div>
+            </div>
+        </div>
+</div>
+{% endblock %}

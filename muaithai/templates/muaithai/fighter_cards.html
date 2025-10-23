@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block content%}
+
+
+<div>
+
+    {% if not request.GET.q %}
+
+
+    <div id="demo" class="carousel slide" data-bs-ride="carousel">
+
+        <!-- Indicators -->
+        <div class="carousel-indicators">
+            {% for item in carousel %}
+            <button type="button" data-bs-target="#demo" data-bs-slide-to="{{ forloop.counter0 }}"
+                class="{% if forloop.first %}active{% endif %}"></button>
+            {% endfor %}
+        </div>
+
+        <!-- Slides -->
+        <div class="carousel-inner">
+            {% for item in carousel %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                <img src="{{ item.image.url }}" class="d-block w-100" alt="{{ item.title }}">
+                <div class="carousel-caption">
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Controls -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#demo" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#demo" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+
+    {% endif %}
+
+
+    <style>
+        .carousel-item img {
+            height: 500px;
+            /* Fixed height */
+            object-fit: contains;
+            /* Prevent stretching, crop instead */
+            width: 100%;
+            border-radius: 10px;
+            /* Optional: rounded corners */
+        }
+
+        /* Overlay gradient on bottom */
+        .carousel-caption {
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0));
+            text-align: center;
+        }
+
+        /* Caption text styling */
+        .carousel-caption h3,
+        .carousel-caption p {
+            color: #fff;
+            /* White text */
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+            /* readability */
+        }
+
+
+
+
+        .fixed-img {
+            height: 330px;
+            /* Fixed height for all images */
+            object-fit: cover;
+            /* Crop instead of stretching */
+            width: 100%;
+            /* Always fill card width */
+        }
+
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+
+
+<div class="container my-4">
+  {% if request.GET.q %}
+    <h4 class="text-white mb-3">Search Results for "{{ request.GET.q }}"</h4>
+    <div class="row">
+      {% for fighter in fighters %}
+        <div class="col-12 col-md-4 mb-4">
+          <div class="card h-100 shadow-lg border-0 rounded-3 overflow-hidden">
+            {% if fighter.Image %}
+              <img src="{{ fighter.Image.url }}" class="card-img-top fixed-img" alt="{{ fighter.Name }}">
+            {% else %}
+              <img src="https://via.placeholder.com/300x200?text={{ fighter.Name|urlencode }}" class="card-img-top fixed-img" alt="{{ fighter.Name }}">
+            {% endif %}
+            <div class="card-body bg-dark text-white">
+              <h5 class="card-title fw-bold">{{ fighter.Name }}</h5>
+              <p class="card-text small">
+                <strong>Weight Class:</strong> {{ fighter.Weight_class }}<br>
+                <strong>Age:</strong> {{ fighter.Age }}<br>
+                <strong>Professional Record:</strong> {{ fighter.Prof_record }}<br>
+                <strong>Created :</strong> {{ fighter.created_at|timesince }} ago<br>
+                <strong>Created on:</strong> {{ fighter.created_at|date:"F j, Y" }} 
+              </p>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-white">No fighters found.</p>
+      {% endfor %}
+    </div>
+  {% else %}
+    <!-- Default grid view -->
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      {% for fighter in fighters %}
+        <div class="col">
+          <div class="card h-100 shadow-lg border-0 rounded-3 overflow-hidden">
+            {% if fighter.Image %}
+              <img src="{{ fighter.Image.url }}" class="card-img-top fixed-img" alt="{{ fighter.Name }}">
+            {% else %}
+              <img src="https://via.placeholder.com/300x200?text={{ fighter.Name|urlencode }}" class="card-img-top fixed-img" alt="{{ fighter.Name }}">
+            {% endif %}
+            <div class="card-body bg-dark text-white">
+              <h5 class="card-title fw-bold">{{ fighter.Name }}</h5>
+              <p class="card-text small">
+                <strong>Weight Class:</strong> {{ fighter.Weight_class }}<br>
+                <strong>Age:</strong> {{ fighter.Age }}<br>
+                <strong>Professional Record:</strong> {{ fighter.Prof_record }}<br>
+                <strong>Created :</strong> {{ fighter.created_at|timesince }} ago<br>
+                <strong>Created on:</strong> {{ fighter.created_at|date:"F j, Y" }} 
+              </p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+</div>
+{% endblock %}
