@@ -1,22 +1,21 @@
-from django.contrib import admin
-from django.urls import path, include
-from muaithai import views
+from django.urls import path
+from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Root URL points to homepage
+    path('', views.homepage, name='homepage'),
 
-    # Homepage
-    path('', views.fighter_cards_view, name='homepage'),
-    path('homepage/', views.fighter_cards_view, name='homepage_alias'),
+    # Optional: /homepage can show the same or a different page
+    path('homepage/', views.fighterCards_view.as_view(), name='fightercards'),
 
     # Fighter CRUD
-    path('createfighter/', views.CreateFighterView.as_view(), name='createfighter'),
-    path('readfighter/', views.ReadFighterView.as_view(), name='readfighter'),
-    path('details/<int:pk>/', views.FighterDetailsView.as_view(), name='details'),
-    path('updatefighter/<int:pk>/', views.UpdateFighterView.as_view(), name='updatefighter'),
-    path('deletefighter/<int:pk>/', views.DeleteFighterView.as_view(), name='deletefighter'),
+    path('createfighter/', views.CreateFighter_view.as_view(), name='createfighter'),
+    path('readfighter/', views.ReadFighter_view.as_view(), name='readfighter'),
+    path('details/<int:pk>/', views.fighterDetailsView.as_view(), name='details'),
+    path('updatefighter/<int:pk>/', views.UpdateFighter_view.as_view(), name='updatefighter'),
+    path('deletefighter/<int:pk>/', views.deleteFighter_view.as_view(), name='deletefighter'),
 
-    # Authentication
+    # Auth
     path('signup/', views.signup_view, name='signup'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
@@ -24,10 +23,6 @@ urlpatterns = [
     # Search
     path('search/', views.search_view, name='search'),
 
-    # AI / Chatbot
-    path('ai_page/', views.chatbot_page, name='ai_page'),
+    # AI/Chatbot
+    path('ai_page/', views.chatbot_page, name='ai_page'), 
     path('chatbot/get_response/', views.chatbot_response, name='chat_response'),
-
-    # API
-    path('api/', include('MMA_api.urls'))
-]
