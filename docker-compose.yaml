@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: sampledb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 00001234
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    restart: always
+
+  web:
+    build: .
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SECRET_KEY: replace-me
+      DB_NAME: sampledb
+      DB_USER: postgres
+      DB_PASSWORD: 00001234
+      DB_HOST: db
+      DB_PORT: 5432
+
+      # API Keys (place these in your .env file)
+      OPENAI_API_KEY: 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
+      RAPIDAPI_KEY: b657e543a8msh0b6348dadac1617p17c82djsnad58cdc3ecdd
+      OPENAI_BASE_URL: OPENAI_BASE_URL
+
+    restart: always
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
