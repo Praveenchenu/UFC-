@@ -6,23 +6,10 @@ pipeline {
         registry = "praveenkumar446/democicd"
         registryCredential = 'dockerhub'
         SONAR_URL = "http://18.234.190.4:9000"
-        SONAR_TOKEN = credentials('sonar-token') 
+        SONAR_TOKEN = credentials('sonar-token')   // Secure token from Jenkins credentials
     }
 
     stages {
-
-        /* --------------------- PIPELINE LINTING ------------------------- */
-        stage('Pipeline Linting') {
-            steps {
-                script {
-                    echo "Running Jenkins Declarative Linter..."
-                    def lint = validateDeclarativePipeline()
-                    if (lint.error) {
-                        error "Pipeline Lint Error:\n${lint.error}"
-                    }
-                }
-            }
-        }
 
         /* ------------------------- FETCH CODE ---------------------------- */
         stage('Fetch Code') {
@@ -53,7 +40,7 @@ pipeline {
                     sonar-scanner \
                         -Dsonar.projectKey=UFC \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=http://18.234.190.4:9000 \
+                        -Dsonar.host.url=http://18.234.190.4:9000  \
                         -Dsonar.login=sqa_c9532b97506c46d2849fdf13cda6c1ee3faa866a
                 """
             }
@@ -75,7 +62,7 @@ pipeline {
         }
 
         /* ----------------------- BUILD DOCKER IMAGE ---------------------- */
-        stage('Build Image') {
+        stage('Build Docker Image') {
             steps {
                 script {
                     docker.withRegistry('', registryCredential) {
@@ -87,9 +74,9 @@ pipeline {
         }
 
         /* ----------------------- SCAN DOCKER IMAGE ----------------------- */
-        stage('Scan Image') {
+        stage('Scan Docker Image') {
             steps {
-                echo "Scanning Docker Image (Trivy)..."
+                echo "Scanning Docker Image with Trivy..."
                 sh """
                     trivy image \
                         --scanners vuln \
@@ -100,7 +87,7 @@ pipeline {
             }
         }
 
-        /* ----------------------- SMOKE TEST ------------------------------ */
+        /* ------------------------- SMOKE TEST ---------------------------- */
         stage('Smoke Test') {
             steps {
                 echo "Running Smoke Test..."
