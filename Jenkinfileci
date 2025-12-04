@@ -1,129 +1,128 @@
 pipeline {
 
-    agent { label 'build' }
+    agent any
 
     environment { 
         registry = "praveenkumar446/democicd"
         registryCredential = 'dockerhub'
         SONAR_URL = "http://18.234.190.4:9000"
-        SONAR_TOKEN = "sqa_ef8f8add8fa242964372e4d7697c973b97117c8f"
+        SONAR_TOKEN = credentials('sonar-token') 
     }
 
     stages {
+
+        /* --------------------- PIPELINE LINTING ------------------------- */
         stage('Pipeline Linting') {
             steps {
                 script {
-                    echo " Running Jenkins Declarative Linter..."
+                    echo "Running Jenkins Declarative Linter..."
                     def lint = validateDeclarativePipeline()
                     if (lint.error) {
-                        error " pipeline Lint Error:\n${lint.error}"
-                    } else {
-                        echo " Pipeline syntax is valid!"
+                        error "Pipeline Lint Error:\n${lint.error}"
                     }
                 }
             }
         }
-	
-	stages {
+
+        /* ------------------------- FETCH CODE ---------------------------- */
         stage('Fetch Code') {
             steps {
                 git branch: 'master', url: 'https://github.com/Praveenchenu/UFC-.git'
             }
         }
 
-        
+        /* -------------------- INSTALL DEPENDENCIES ----------------------- */
         stage('Install Dependencies') {
             steps {
                 sh 'pip install -r requirements.txt'
             }
         }
 
-        
+        /* -------------------------- RUN TESTS ---------------------------- */
         stage('Run Tests') {
             steps {
                 sh 'python manage.py test'
             }
         }
 
-     
+        /* ------------------------- SONAR SCAN ---------------------------- */
         stage('SonarQube Scan') {
             steps {
                 echo 'Running SonarQube Scan...'
-                sh '''
+                sh """
                     sonar-scanner \
                         -Dsonar.projectKey=UFC \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url= http://18.234.190.4:9000 \
-                        -Dsonar.login: sqa_c9532b97506c46d2849fdf13cda6c1ee3faa866a
-                '''
+                        -Dsonar.host.url=http://18.234.190.4:9000 \
+                        -Dsonar.login=sqa_c9532b97506c46d2849fdf13cda6c1ee3faa866a
+                """
             }
         }
 
-        
+        /* --------------------- SONAR QUALITY GATES ----------------------- */
         stage('Quality Gates') {
             steps {
-                echo "Checking SonarQube Quality Gates..."
                 script {
+                    echo "Waiting for SonarQube Quality Gate..."
                     timeout(time: 1, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
-                            error "Quality Gate failure: ${qg.status}"
+                            error "Pipeline aborted due to Quality Gate failure: ${qg.status}"
                         }
                     }
                 }
             }
         }
 
-    
+        /* ----------------------- BUILD DOCKER IMAGE ---------------------- */
         stage('Build Image') {
             steps {
-                echo "Building Docker Image..."
                 script {
                     docker.withRegistry('', registryCredential) {
-                        myImage = docker.build("${registry}:latest")
+                        def myImage = docker.build("${registry}:latest")
                         myImage.push()
                     }
                 }
             }
         }
 
-       
+        /* ----------------------- SCAN DOCKER IMAGE ----------------------- */
         stage('Scan Image') {
             steps {
-                echo "Scanning Docker Image using Trivy..."
-                sh '''
+                echo "Scanning Docker Image (Trivy)..."
+                sh """
                     trivy image \
                         --scanners vuln \
                         --offline-scan \
-                        praveenkumar446/democicd:latest \
+                        ${registry}:latest \
                         > trivyresults.txt
-                '''
+                """
             }
         }
 
-        
+        /* ----------------------- SMOKE TEST ------------------------------ */
         stage('Smoke Test') {
             steps {
-                echo "Running Smoke Test Container..."
-                sh '''
-                    docker run -d --name smokerun -p 8080:8080 praveenkumar446/democicd:latest
+                echo "Running Smoke Test..."
+                sh """
+                    docker run -d --name smokerun -p 8080:8080 ${registry}:latest
                     sleep 20
                     ./check.sh || true
                     docker rm --force smokerun
-                '''
+                """
             }
         }
     }
 
     post {
-        always {
-            echo "Pipeline Completed."
-        }
         success {
-            echo "Pipeline SUCCESS!"
+            echo "Pipeline SUCCESSFUL!"
         }
         failure {
             echo "Pipeline FAILED!"
+        }
+        always {
+            echo "Pipeline Completed."
         }
     }
 }
