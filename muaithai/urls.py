@@ -24,5 +24,6 @@ urlpatterns = [
     path('search/', views.search_view, name='search'),
 
     # AI/Chatbot
-    path('ai_page/', views.chatbot_page, name='ai_page'), 
+    path('ai_page/', views.chatbot_page, name='ai_page'),
     path('chatbot/get_response/', views.chatbot_response, name='chat_response'),
+]
