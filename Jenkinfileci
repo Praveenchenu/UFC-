@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.11-slim'   // Python Docker image with pip pre-installed
+            args '-u root:root'         // Optional: run as root to avoid permission issues
+        }
+    }
 
     environment { 
         registry = "praveenkumar446/democicd"
@@ -27,14 +32,15 @@ pipeline {
         /* -------------------- INSTALL DEPENDENCIES ----------------------- */
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                sh 'python3 -m pip install --upgrade pip'
+                sh 'python3 -m pip install -r requirements.txt'
             }
         }
 
         /* -------------------------- RUN TESTS ---------------------------- */
         stage('Run Tests') {
             steps {
-                sh 'python manage.py test'
+                sh 'python3 manage.py test'
             }
         }
 
