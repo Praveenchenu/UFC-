@@ -5,7 +5,7 @@ pipeline {
     environment { 
         registry = "praveenkumar446/democicd"
         registryCredential = 'dockerhub'
-        SONAR_URL = "http://3.94.203.42:9000"
+        SONAR_URL = "http://3.82.243.18:9000"
         SONAR_TOKEN = credentials('sonar-token') 
     }
 
@@ -33,11 +33,14 @@ pipeline {
 
         /* -------------------- INSTALL DEPENDENCIES ----------------------- */
         stage('Install Dependencies') {
-            steps {
-             script {
-              docker.image('python:3.11-slim').inside {
-                 sh 'python3 -m pip install -r requirements.txt
-                 sh 'python manage.py test'
+    steps {
+        script {
+            docker.image('python:3.11-slim').inside {
+                sh '''
+                    python3 -m pip install --upgrade pip
+                    python3 -m pip install -r requirements.txt
+                    python3 manage.py test
+                '''
             }
         }
     }
@@ -45,10 +48,17 @@ pipeline {
 
         /* -------------------------- RUN TESTS ---------------------------- */
         stage('Run Tests') {
-            steps {
-                sh 'python manage.py test'
+    steps {
+        script {
+            docker.image('python:3.11-slim').inside {
+                sh '''
+                    python3 manage.py test
+                '''
             }
         }
+    }
+}
+
 
         /* ------------------------- SONAR SCAN ---------------------------- */
         stage('SonarQube Scan') {
@@ -58,8 +68,8 @@ pipeline {
                     sonar-scanner \
                         -Dsonar.projectKey=UFC \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=http://3.94.203.42:9000 \
-                        -Dsonar.login=sqa_c9532b97506c46d2849fdf13cda6c1ee3faa866a
+                        -Dsonar.host.url=http://3.82.243.18:9000 \
+                        -Dsonar.login=sqa_f87a2c4bfc6331f3e300b6474a0adb1372ab6ed7
                 """
             }
         }
