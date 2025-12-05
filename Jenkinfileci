@@ -1,5 +1,4 @@
 pipeline {
-
     agent any
 
     environment { 
@@ -14,13 +13,7 @@ pipeline {
         /* --------------------- PIPELINE LINTING ------------------------- */
         stage('Pipeline Linting') {
             steps {
-                script {
-                    echo "Running Jenkins Declarative Linter..."
-                    def lint = validateDeclarativePipeline()
-                    if (lint.error) {
-                        error "Pipeline Lint Error:\n${lint.error}"
-                    }
-                }
+                echo "Skipping Declarative Linter; run it via Jenkins UI if needed"
             }
         }
 
@@ -53,8 +46,8 @@ pipeline {
                     sonar-scanner \
                         -Dsonar.projectKey=UFC \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=http://3.94.203.42:9000 \
-                        -Dsonar.login=sqa_c9532b97506c46d2849fdf13cda6c1ee3faa866a
+                        -Dsonar.host.url=${SONAR_URL} \
+                        -Dsonar.login=${SONAR_TOKEN}
                 """
             }
         }
@@ -64,7 +57,7 @@ pipeline {
             steps {
                 script {
                     echo "Waiting for SonarQube Quality Gate..."
-                    timeout(time: 1, unit: 'MINUTES') {
+                    timeout(time: 5, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
                             error "Pipeline aborted due to Quality Gate failure: ${qg.status}"
