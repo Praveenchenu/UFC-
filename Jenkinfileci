@@ -20,7 +20,7 @@ pipeline {
         /* ------------------------- FETCH CODE ---------------------------- */
         stage('Fetch Code') {
             steps {
-                git branch: 'main', credentialsId: 'gitcred', url: 'https://github.com/Praveenchenu/UFC-.git'
+                git branch: 'master', credentialsId: 'gitcred', url: 'https://github.com/Praveenchenu/UFC-.git'
             }
         }
 
