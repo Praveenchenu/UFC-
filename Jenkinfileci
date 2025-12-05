@@ -1,10 +1,6 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.11-slim'   // Python Docker image with pip pre-installed
-            args '-u root:root'         // Optional: run as root to avoid permission issues
-        }
-    }
+
+    agent any
 
     environment { 
         registry = "praveenkumar446/democicd"
@@ -18,7 +14,13 @@ pipeline {
         /* --------------------- PIPELINE LINTING ------------------------- */
         stage('Pipeline Linting') {
             steps {
-                echo "Skipping Declarative Linter; run it via Jenkins UI if needed"
+                script {
+                    echo "Running Jenkins Declarative Linter..."
+                    def lint = validateDeclarativePipeline()
+                    if (lint.error) {
+                        error "Pipeline Lint Error:\n${lint.error}"
+                    }
+                }
             }
         }
 
@@ -32,15 +34,19 @@ pipeline {
         /* -------------------- INSTALL DEPENDENCIES ----------------------- */
         stage('Install Dependencies') {
             steps {
-                sh 'python3 -m pip install --upgrade pip'
-                sh 'python3 -m pip install -r requirements.txt'
+             script {
+              docker.image('python:3.11-slim').inside {
+                 sh 'pip install -r requirements.txt'
+                 sh 'python manage.py test'
             }
         }
+    }
+}
 
         /* -------------------------- RUN TESTS ---------------------------- */
         stage('Run Tests') {
             steps {
-                sh 'python3 manage.py test'
+                sh 'python manage.py test'
             }
         }
 
@@ -52,8 +58,8 @@ pipeline {
                     sonar-scanner \
                         -Dsonar.projectKey=UFC \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=${SONAR_URL} \
-                        -Dsonar.login=${SONAR_TOKEN}
+                        -Dsonar.host.url=http://3.94.203.42:9000 \
+                        -Dsonar.login=sqa_c9532b97506c46d2849fdf13cda6c1ee3faa866a
                 """
             }
         }
@@ -63,7 +69,7 @@ pipeline {
             steps {
                 script {
                     echo "Waiting for SonarQube Quality Gate..."
-                    timeout(time: 5, unit: 'MINUTES') {
+                    timeout(time: 1, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
                             error "Pipeline aborted due to Quality Gate failure: ${qg.status}"
