@@ -5,16 +5,29 @@ pipeline {
     environment { 
         registry = "praveenkumar446/democicd"
         registryCredential = 'dockerhub'
-        SONAR_URL = "http://18.234.190.4:9000"
-        SONAR_TOKEN = credentials('sonar-token')   // Secure token from Jenkins credentials
+        SONAR_URL = "http://3.94.203.42:9000"
+        SONAR_TOKEN = credentials('sonar-token') 
     }
 
     stages {
 
+        /* --------------------- PIPELINE LINTING ------------------------- */
+        stage('Pipeline Linting') {
+            steps {
+                script {
+                    echo "Running Jenkins Declarative Linter..."
+                    def lint = validateDeclarativePipeline()
+                    if (lint.error) {
+                        error "Pipeline Lint Error:\n${lint.error}"
+                    }
+                }
+            }
+        }
+
         /* ------------------------- FETCH CODE ---------------------------- */
         stage('Fetch Code') {
             steps {
-                git branch: 'master', url: 'https://github.com/Praveenchenu/UFC-.git'
+                git branch: 'main', credentialsId: 'gitcred', url: 'https://github.com/Praveenchenu/UFC-.git'
             }
         }
 
@@ -40,7 +53,7 @@ pipeline {
                     sonar-scanner \
                         -Dsonar.projectKey=UFC \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=http://18.234.190.4:9000  \
+                        -Dsonar.host.url=http://3.94.203.42:9000 \
                         -Dsonar.login=sqa_c9532b97506c46d2849fdf13cda6c1ee3faa866a
                 """
             }
@@ -62,7 +75,7 @@ pipeline {
         }
 
         /* ----------------------- BUILD DOCKER IMAGE ---------------------- */
-        stage('Build Docker Image') {
+        stage('Build Image') {
             steps {
                 script {
                     docker.withRegistry('', registryCredential) {
@@ -74,9 +87,9 @@ pipeline {
         }
 
         /* ----------------------- SCAN DOCKER IMAGE ----------------------- */
-        stage('Scan Docker Image') {
+        stage('Scan Image') {
             steps {
-                echo "Scanning Docker Image with Trivy..."
+                echo "Scanning Docker Image (Trivy)..."
                 sh """
                     trivy image \
                         --scanners vuln \
@@ -87,7 +100,7 @@ pipeline {
             }
         }
 
-        /* ------------------------- SMOKE TEST ---------------------------- */
+        /* ----------------------- SMOKE TEST ------------------------------ */
         stage('Smoke Test') {
             steps {
                 echo "Running Smoke Test..."
