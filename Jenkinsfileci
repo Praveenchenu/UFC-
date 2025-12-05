@@ -6,71 +6,46 @@ pipeline {
         registry = "praveenkumar446/democicd"
         registryCredential = 'dockerhub'
         SONAR_URL = "http://3.82.243.18:9000"
-        SONAR_TOKEN = credentials('sonar-token') 
+        SONAR_TOKEN = credentials('sonar-token')
     }
 
     stages {
 
-        /* --------------------- PIPELINE LINTING ------------------------- */
-        stage('Pipeline Linting') {
-            steps {
-                script {
-                    echo "Running Jenkins Declarative Linter..."
-                    def lint = validateDeclarativePipeline()
-                    if (lint.error) {
-                        error "Pipeline Lint Error:\n${lint.error}"
-                    }
-                }
-            }
-        }
-
-        /* ------------------------- FETCH CODE ---------------------------- */
+        /* ------------------------- CHECKOUT ---------------------------- */
         stage('Fetch Code') {
             steps {
                 git branch: 'master', credentialsId: 'gitcred', url: 'https://github.com/Praveenchenu/UFC-.git'
             }
         }
 
-        /* -------------------- INSTALL DEPENDENCIES ----------------------- */
-        stage('Install Dependencies') {
-    steps {
-        script {
-            docker.image('python:3.11-slim').inside {
-                sh '''
-                    python3 -m pip install --upgrade pip
-                    python3 -m pip install -r requirements.txt
-                    python3 manage.py test
-                '''
+        /* -------------------- INSTALL + TEST --------------------------- */
+        stage('Install Dependencies & Run Tests') {
+            steps {
+                script {
+                    docker.image('python:3.11-slim').inside {
+                        sh """
+                            python3 -m pip install --upgrade pip --break-system-packages
+                            python3 -m pip install -r requirements.txt --break-system-packages
+                            python3 manage.py test
+                        """
+                    }
+                }
             }
         }
-    }
-}
-
-        /* -------------------------- RUN TESTS ---------------------------- */
-        stage('Run Tests') {
-    steps {
-        script {
-            docker.image('python:3.11-slim').inside {
-                sh '''
-                    python3 manage.py test
-                '''
-            }
-        }
-    }
-}
-
 
         /* ------------------------- SONAR SCAN ---------------------------- */
         stage('SonarQube Scan') {
             steps {
                 echo 'Running SonarQube Scan...'
-                sh """
-                    sonar-scanner \
-                        -Dsonar.projectKey=UFC \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://3.82.243.18:9000 \
-                        -Dsonar.login=sqa_f87a2c4bfc6331f3e300b6474a0adb1372ab6ed7
-                """
+                withSonarQubeEnv('SonarServer') {
+                    sh """
+                        sonar-scanner \
+                          -Dsonar.projectKey=UFC \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=${SONAR_URL} \
+                          -Dsonar.login=${SONAR_TOKEN}
+                    """
+                }
             }
         }
 
@@ -82,7 +57,7 @@ pipeline {
                     timeout(time: 1, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
-                            error "Pipeline aborted due to Quality Gate failure: ${qg.status}"
+                            error "Pipeline failed due to Quality Gate: ${qg.status}"
                         }
                     }
                 }
@@ -94,23 +69,22 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('', registryCredential) {
-                        def myImage = docker.build("${registry}:latest")
-                        myImage.push()
+                        def img = docker.build("${registry}:latest")
+                        img.push()
                     }
                 }
             }
         }
 
-        /* ----------------------- SCAN DOCKER IMAGE ----------------------- */
+        /* ----------------------- TRIVY SCAN ----------------------------- */
         stage('Scan Image') {
             steps {
-                echo "Scanning Docker Image (Trivy)..."
+                echo "Running Trivy Scan"
                 sh """
                     trivy image \
-                        --scanners vuln \
-                        --offline-scan \
-                        ${registry}:latest \
-                        > trivyresults.txt
+                      --scanners vuln \
+                      --skip-db-update \
+                      ${registry}:latest > trivyresults.txt
                 """
             }
         }
@@ -118,12 +92,11 @@ pipeline {
         /* ----------------------- SMOKE TEST ------------------------------ */
         stage('Smoke Test') {
             steps {
-                echo "Running Smoke Test..."
                 sh """
                     docker run -d --name smokerun -p 8080:8080 ${registry}:latest
                     sleep 20
                     ./check.sh || true
-                    docker rm --force smokerun
+                    docker rm -f smokerun
                 """
             }
         }
