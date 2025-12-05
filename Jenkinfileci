@@ -36,7 +36,7 @@ pipeline {
             steps {
              script {
               docker.image('python:3.11-slim').inside {
-                 sh 'pip install -r requirements.txt'
+                 sh 'python3 -m pip install -r requirements.txt
                  sh 'python manage.py test'
             }
         }
